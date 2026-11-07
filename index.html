@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>E-Gift | Digital Gifts</title>
-
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:Arial,sans-serif;background:#fff8fb;color:#292033}
@@ -14,6 +14,7 @@ header{padding:20px 7%;display:flex;justify-content:space-between;align-items:ce
 .logo span{color:#e879a8}
 a{color:inherit;text-decoration:none}
 button{border:0;border-radius:10px;padding:13px 20px;background:#e879a8;color:white;font-weight:bold;cursor:pointer}
+button:disabled{opacity:.6;cursor:wait}
 .hero{padding:90px 8%;background:linear-gradient(135deg,#21182e,#70466b);color:white}
 .hero small{color:#ffacd0;letter-spacing:3px}
 .hero h1{font-size:clamp(42px,8vw,75px);margin:25px 0}
@@ -31,23 +32,20 @@ h2{margin-bottom:25px}
 form{max-width:500px;display:grid;gap:14px}
 input,textarea,select{width:100%;padding:14px;border:1px solid #ead7e1;border-radius:9px;font-size:15px}
 textarea{min-height:100px}
-#result{margin-top:15px;color:#a34e78}
+#result{margin-top:15px;color:#a34e78;line-height:1.5}
 footer{text-align:center;background:#21182e;color:white;padding:25px}
-.admin{background:#f3edf5;min-height:100vh;display:none;padding:35px 7%}
+.admin{background:#f3edf5;min-height:100vh;padding:35px 7%;display:none}
 .admin-box{max-width:850px;margin:auto}
 .admin-box h2{margin:20px 0}
-.order-card{background:white;padding:20px;margin:15px 0;border-radius:14px}
-.order-card p{margin:10px 0;color:#666}
-.order-card select{margin:5px 0}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
 .stat{background:white;padding:20px;border-radius:12px}
 .stat strong{font-size:23px;display:block;margin-top:10px}
+.order-card{background:white;padding:20px;margin:15px 0;border-radius:14px}
+.order-card p{margin:10px 0;color:#666}
 .hidden{display:none!important}
-.admin-link{font-size:13px;color:#777}
 @media(max-width:600px){.hero{padding:65px 7%}section{padding:45px 7%}}
 </style>
 </head>
-
 <body>
 
 <header>
@@ -56,7 +54,6 @@ footer{text-align:center;background:#21182e;color:white;padding:25px}
 </header>
 
 <div id="mainSite">
-
 <section class="hero">
  <small>SPECIAL MOMENTS ✨</small>
  <h1>Make someone<br><span>feel special.</span></h1>
@@ -73,59 +70,41 @@ footer{text-align:center;background:#21182e;color:white;padding:25px}
  <h2>Buyurtma berish</h2>
  <form id="orderForm">
   <input id="customer" placeholder="Ismingiz" required maxlength="60">
+  <input id="contact" placeholder="Telegram yoki telefon raqamingiz" required maxlength="100">
   <input id="recipient" placeholder="Kim uchun?" required maxlength="60">
   <select id="product" required>
    <option value="">Sovg'ani tanlang</option>
   </select>
   <textarea id="message" placeholder="Tilagingiz..." required maxlength="700"></textarea>
-  <button type="submit">Buyurtma berish</button>
+  <button id="submitBtn" type="submit">Buyurtma berish</button>
  </form>
- <p id="result"></p>
+ <p id="result" role="status"></p>
 </section>
 
 <footer>© 2026 E-Gift · All rights reserved</footer>
 </div>
 
-<!-- ADMIN LOGIN -->
 <div class="admin" id="admin">
  <div class="admin-box">
   <h1>E-Gift Admin ✦</h1>
-
-  <div id="login">
-   <h2>Admin panelga kirish</h2>
-   <form id="loginForm">
-    <input id="username" placeholder="Login" required>
-    <input id="password" type="password" placeholder="Parol" required>
-    <button>Kirish</button>
-   </form>
-   <p id="loginError"></p>
-  </div>
-
-  <div id="dashboard" class="hidden">
-   <button onclick="logout()">Chiqish</button>
-   <h2>Dashboard</h2>
-
-   <div class="stats">
-    <div class="stat">Buyurtmalar<strong id="total">0</strong></div>
-    <div class="stat">Tushum<strong id="income">0</strong></div>
-    <div class="stat">Yangi buyurtmalar<strong id="pending">0</strong></div>
-   </div>
-
-   <h2>Barcha buyurtmalar</h2>
-   <div id="orders"></div>
-  </div>
+  <h2>Admin panel</h2>
+  <p>Admin panelni xavfsiz ulash uchun Supabase Auth va alohida admin ruxsatlari sozlanishi kerak.</p>
+  <p>Hozircha bu sahifada buyurtmalar ko‘rsatilmaydi.</p>
  </div>
 </div>
 
 <script>
+const SUPABASE_URL="https://yanyuozjfxgwooiaicjl.supabase.co";
+const SUPABASE_KEY="sb_publishable_7hcJo-3466jqrXzf_sbZIw_76W-S9Qk";
+
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
 const gifts=[
  {name:"Birthday Card",price:5000,icon:"🎂",desc:"Tug'ilgan kun tabriknomasi"},
  {name:"Love Letter",price:10000,icon:"💌",desc:"Elektron sevgi maktubi"},
  {name:"Anniversary",price:10000,icon:"🌷",desc:"Maxsus sana uchun sovg'a"},
  {name:"Surprise Page",price:20000,icon:"🎁",desc:"Shaxsiy sovg'a sahifasi"}
 ];
-
-let orders=JSON.parse(localStorage.getItem("egift_orders")||"[]");
 
 const money=n=>new Intl.NumberFormat("uz-UZ").format(n)+" so'm";
 
@@ -134,15 +113,30 @@ function renderGifts(){
  const select=document.getElementById("product");
 
  gifts.forEach(g=>{
-  box.innerHTML+=`
-   <div class="card">
-    <div class="emoji">${g.icon}</div>
-    <h3>${g.name}</h3>
-    <p>${g.desc}</p>
-    <strong>${money(g.price)}</strong>
-    <button onclick="selectGift('${g.name}')">Tanlash</button>
-   </div>`;
-  select.innerHTML+=`<option value="${g.name}">${g.name} — ${money(g.price)}</option>`;
+  const card=document.createElement("div");
+  card.className="card";
+
+  const emoji=document.createElement("div");
+  emoji.className="emoji";
+  emoji.textContent=g.icon;
+
+  const title=document.createElement("h3");
+  title.textContent=g.name;
+
+  const desc=document.createElement("p");
+  desc.textContent=g.desc;
+
+  const price=document.createElement("strong");
+  price.textContent=money(g.price);
+
+  const btn=document.createElement("button");
+  btn.textContent="Tanlash";
+  btn.onclick=()=>selectGift(g.name);
+
+  card.append(emoji,title,desc,price,btn);
+  box.append(card);
+
+  select.add(new Option(g.name+" — "+money(g.price),g.name));
  });
 }
 
@@ -151,8 +145,11 @@ function selectGift(name){
  document.querySelector(".order").scrollIntoView({behavior:"smooth"});
 }
 
-document.getElementById("orderForm").onsubmit=function(e){
+document.getElementById("orderForm").addEventListener("submit",async function(e){
  e.preventDefault();
+
+ const btn=document.getElementById("submitBtn");
+ const result=document.getElementById("result");
 
  const product=document.getElementById("product").value;
  const gift=gifts.find(g=>g.name===product);
@@ -160,106 +157,47 @@ document.getElementById("orderForm").onsubmit=function(e){
  if(!gift)return;
 
  const order={
-  id:Date.now(),
-  customer:document.getElementById("customer").value.trim(),
+  customer_name:document.getElementById("customer").value.trim(),
+  contact:document.getElementById("contact").value.trim(),
   recipient:document.getElementById("recipient").value.trim(),
-  product:product,
-  message:document.getElementById("message").value.trim(),
+  gift_type:product,
   price:gift.price,
-  payment:"Kutilmoqda",
-  status:"Yangi",
-  date:new Date().toLocaleString("uz-UZ")
+  message:document.getElementById("message").value.trim(),
+  status:"new",
+  payment_status:"Kutilmoqda"
  };
 
- orders.unshift(order);
- save();
+ btn.disabled=true;
+ btn.textContent="Yuborilmoqda...";
+ result.textContent="Buyurtmangiz yuborilmoqda...";
 
- document.getElementById("result").textContent=
- "Buyurtmangiz qabul qilindi! ❤️";
+ try{
+  const {error}=await db.from("orders").insert([order]);
 
- this.reset();
-};
+  if(error){
+   console.error("Supabase error:",error);
+   result.textContent="Xatolik: "+error.message;
+   return;
+  }
 
-function save(){
- localStorage.setItem("egift_orders",JSON.stringify(orders));
-}
+  result.textContent="Buyurtmangiz muvaffaqiyatli qabul qilindi! ❤️";
+  this.reset();
 
-function renderAdmin(){
- document.getElementById("total").textContent=orders.length;
-
- const income=orders
- .filter(o=>o.payment==="To'langan")
- .reduce((sum,o)=>sum+o.price,0);
-
- document.getElementById("income").textContent=money(income);
-
- document.getElementById("pending").textContent=
- orders.filter(o=>o.status==="Yangi").length;
-
- const box=document.getElementById("orders");
- box.innerHTML="";
-
- orders.forEach(o=>{
-  const card=document.createElement("div");
-  card.className="order-card";
-
-  const title=document.createElement("h3");
-  title.textContent=o.product+" — "+money(o.price);
-
-  const details=document.createElement("p");
-  details.textContent="Mijoz: "+o.customer+" | Kim uchun: "+o.recipient;
-
-  const message=document.createElement("p");
-  message.textContent="Tilak: "+o.message;
-
-  const date=document.createElement("p");
-  date.textContent="Sana: "+o.date;
-
-  const payment=document.createElement("select");
-  ["Kutilmoqda","To'langan"].forEach(v=>payment.add(new Option(v,v)));
-  payment.value=o.payment;
-  payment.onchange=()=>{o.payment=payment.value;save();renderAdmin();};
-
-  const status=document.createElement("select");
-  ["Yangi","Jarayonda","Tayyor","Bekor qilingan"].forEach(v=>status.add(new Option(v,v)));
-  status.value=o.status;
-  status.onchange=()=>{o.status=status.value;save();renderAdmin();};
-
-  card.append(title,details,message,date,payment,status);
-  box.append(card);
- });
-}
-
-document.getElementById("loginForm").onsubmit=function(e){
- e.preventDefault();
-
- // DEMO LOGIN: production uchun xavfsiz emas!
- if(
- document.getElementById("username").value==="admin" &&
- document.getElementById("password").value==="123456"
- ){
-  document.getElementById("login").classList.add("hidden");
-  document.getElementById("dashboard").classList.remove("hidden");
-  renderAdmin();
- }else{
-  document.getElementById("loginError").textContent="Login yoki parol noto'g'ri!";
+ }catch(err){
+  console.error(err);
+  result.textContent="Internet yoki server bilan bog'liq xatolik yuz berdi.";
+ }finally{
+  btn.disabled=false;
+  btn.textContent="Buyurtma berish";
  }
-};
-
-function logout(){
- document.getElementById("dashboard").classList.add("hidden");
- document.getElementById("login").classList.remove("hidden");
-}
-
-function openAdmin(){
- document.getElementById("mainSite").style.display="none";
- document.getElementById("admin").style.display="block";
-}
+});
 
 renderGifts();
 
-// Demo admin panelini URL oxiriga #admin qo'shib ochish mumkin.
-if(location.hash==="#admin")openAdmin();
+if(location.hash==="#admin"){
+ document.getElementById("mainSite").style.display="none";
+ document.getElementById("admin").style.display="block";
+}
 </script>
 </body>
 </html>
